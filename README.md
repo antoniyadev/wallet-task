@@ -1,7 +1,6 @@
-
 # 💸 Wallet Task
 
-This is a Laravel-based wallet application built as part of a coding challenge. It includes user roles, money transfer, order handling, and transaction tracking. The project is dockerized and configured to run with PHP 7.4 and MySQL 5.7.
+This is a full-stack Laravel + React wallet application developed as part of a technical assessment. It features user roles (admin/merchant), wallet transactions, top-up orders, and internal money transfers. The app is containerized using Docker and works seamlessly across macOS, Ubuntu, and Windows (via WSL2).
 
 ---
 
@@ -22,7 +21,7 @@ This is a Laravel-based wallet application built as part of a coding challenge. 
 ### 📦 Clone and Run
 
 ```bash
-git clone https://github.com/your-username/wallet-task.git
+git clone https://github.com/antoniyadev/wallet-task.git
 cd wallet-task
 cp .env.example .env
 docker compose up -d --build
@@ -48,10 +47,17 @@ php artisan db:seed
 
 ## 🌐 Access the App
 
-- [http://localhost:8080](http://localhost:8080) — Laravel homepage
-- Admin user:
-  - Email: `admin@example.com`
-  - Password: `secretpassword`
+- Laravel backend: [http://localhost:8080](http://localhost:8080)
+- React frontend: [http://localhost:3000](http://localhost:3000)
+
+---
+
+## 👤 Test Users
+
+| Role     | Email                  | Password          |
+|----------|------------------------|-------------------|
+| Admin    | admin@example.com      | secretpassword    |
+| Merchant | merchant@example.com   | merchantpassword  |
 
 ---
 
@@ -100,12 +106,29 @@ docker exec -it wallet-app php artisan test
 
 ## 📂 Folder Layout
 
+- `frontend/` — React application (SPA)
 - `docker/` — Dockerfile for PHP environment
 - `routes/` — Route definitions
 - `app/Models/` — `User`, `Order`, `Transaction` models
 - `app/Services/` — Business logic for order/transfer handling
 - `resources/views/` — Blade templates
 - `tests/` — Unit and feature tests
+
+---
+
+## ⚛️ React Frontend
+
+The frontend is built with React and Bootstrap 4.
+
+### Run frontend:
+
+```bash
+cd frontend
+npm install
+npm start
+```
+
+The app runs at [http://localhost:3000](http://localhost:3000) and interacts with Laravel through cookies and CSRF protection.
 
 ---
 
