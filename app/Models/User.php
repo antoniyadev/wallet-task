@@ -62,4 +62,19 @@ class User extends Authenticatable
     {
         return $this->hasMany(Transaction::class);
     }
+
+    public function scopeMerchants($query)
+    {
+        return $query->whereHas('role', fn ($q) => $q->where('slug', Role::MERCHANT));
+    }
+
+    public function isAdmin(): bool
+    {
+        return $this->role->slug === Role::ADMIN;
+    }
+
+    public function isMerchant(): bool
+    {
+        return $this->role->slug === Role::MERCHANT;
+    }
 }

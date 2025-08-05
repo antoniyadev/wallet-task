@@ -16,8 +16,8 @@ class UserSeeder extends Seeder
      */
     public function run()
     {
-        $admin    = Role::where('slug', 'admin')->first();
-        $merchant = Role::where('slug', 'merchant')->first();
+        $adminRole    = Role::where('slug', Role::ADMIN)->first();
+        $merchantRole = Role::where('slug', Role::MERCHANT)->first();
 
         User::insert([
             [
@@ -25,7 +25,7 @@ class UserSeeder extends Seeder
                 'description' => 'Platform administrator',
                 'email'       => 'admin@example.com',
                 'password'    => Hash::make('secretpassword'),
-                'role_id'     => $admin->id,
+                'role_id'     => $adminRole->id,
                 'amount'      => 100000,
             ],
             [
@@ -33,9 +33,21 @@ class UserSeeder extends Seeder
                 'description' => 'Test merchant account',
                 'email'       => 'merchant@example.com',
                 'password'    => Hash::make('merchantpassword'),
-                'role_id'     => $merchant->id,
+                'role_id'     => $merchantRole->id,
                 'amount'      => 50000,
             ],
         ]);
+
+        // Generate 10 more merchants
+        foreach (range(1, 10) as $i) {
+            User::create([
+                'name'        => "Merchant $i",
+                'description' => "Auto-generated merchant $i",
+                'email'       => "merchant$i@example.com",
+                'password'    => Hash::make('merchantpassword'),
+                'role_id'     => $merchantRole->id,
+                'amount'      => rand(10000, 50000),
+            ]);
+        }
     }
 }
