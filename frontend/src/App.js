@@ -1,6 +1,8 @@
 import React, { useEffect, useState, useRef } from 'react';
 import axios from 'axios';
 import Cookies from 'js-cookie';
+import Login from './components/Login';
+import Navbar from './components/Navbar';
 
 axios.defaults.baseURL = 'http://localhost:8080';
 axios.defaults.withCredentials = true;
@@ -8,16 +10,25 @@ axios.defaults.withCredentials = true;
 function App() {
   const [user, setUser] = useState(null);
   const [status, setStatus] = useState('loading');
-  const hasRun = useRef(false); // 👈 prevents double execution
 
-  const loginAndFetchUser = async () => {
+  const hasRun = useRef(false); // prevents double execution
+  const fetchUser = async () => {
     try {
-      setStatus('authenticating');
+      const response = await axios.get('/api/user');
+      setUser(response.data);
+      setStatus('authenticated');
+    } catch (err) {
+      setUser(null);
+      setStatus('unauthenticated');
+    }
+  };
 
-      // Step 1: Get CSRF cookie
+  const logout = async () => {
+    try {
+      // Get CSRF cookie
       await axios.get('/sanctum/csrf-cookie');
 
-      // Step 2: Set CSRF token manually
+      // Read the token from cookies and set header
       const csrfToken = Cookies.get('XSRF-TOKEN');
       if (csrfToken) {
         axios.defaults.headers.common['X-XSRF-TOKEN'] = decodeURIComponent(csrfToken);
@@ -26,43 +37,34 @@ function App() {
         return;
       }
 
-      // Step 3: Login
-      await axios.post('/login', {
-        email: 'merchant@example.com',
-        password: 'merchantpassword',
-      });
+      await axios.post('/logout');
 
-      // Step 4: Fetch authenticated user
-      const response = await axios.get('/api/user');
-      setUser(response.data);
-      setStatus('authenticated');
-    } catch (error) {
-      console.error('Auth error:', error);
+      setUser(null);
       setStatus('unauthenticated');
+    } catch (error) {
+      console.error('Logout failed:', error.response?.data || error.message);
     }
   };
 
   useEffect(() => {
     if (!hasRun.current) {
-      hasRun.current = true;
-      loginAndFetchUser();
-    }
+        hasRun.current = true;
+        fetchUser();
+      }
   }, []);
 
+  if (status === 'loading') return <p>Loading...</p>;
+
+  if (!user) return <Login onLogin={fetchUser} />;
+
   return (
+    <div>
+    <Navbar user={user} onLogout={logout} />
     <div className="container mt-4">
-      <h1>Wallet App</h1>
-      {status === 'loading' && <p>Loading...</p>}
-      {status === 'unauthenticated' && (
-        <div className="alert alert-danger">❌ Could not log in.</div>
-      )}
-      {status === 'authenticated' && user && (
-        <div className="card p-4">
-          <h4>Welcome, {user.name}!</h4>
-          <p>Email: {user.email}</p>
-        </div>
-      )}
+      <h2>Welcome, {user.name}</h2>
+      <p>Email: {user.email}</p>
     </div>
+  </div>
   );
 }
 
