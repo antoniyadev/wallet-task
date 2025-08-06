@@ -1,5 +1,7 @@
+import 'bootstrap/dist/css/bootstrap.min.css';
+import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import React, { useEffect, useState, useRef } from 'react';
-import { BrowserRouter as Router, Routes, Route } from 'react-router-dom';
+import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import Login from './components/Login';
@@ -7,6 +9,7 @@ import Navbar from './components/Navbar';
 import AdminDashboard from './components/AdminDashboard';
 import MerchantDashboard from './components/MerchantDashboard';
 import UserDetail from './components/UserDetail';
+import OrderTable from './components/OrderTable';
 
 axios.defaults.baseURL = 'http://localhost:8080';
 axios.defaults.withCredentials = true;
@@ -68,8 +71,10 @@ function App() {
                 <Routes>
                     {user.role === 'admin' && (
                         <>
-                            <Route path="/admin" element={<AdminDashboard />} />
+                            <Route path="/admin" element={<Navigate to="/admin/users" replace />} />
+                            <Route path="/admin/users" element={<AdminDashboard />} />
                             <Route path="/admin/users/:id" element={<UserDetail />} />
+                            <Route path="/admin/orders" element={<OrderTable />} />
                         </>
                     )}
                     {user.role === 'merchant' && (

@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Api\Admin\OrderController;
 use App\Http\Controllers\Api\Admin\RoleController;
 use App\Http\Controllers\Api\Admin\UserController;
 use Illuminate\Http\Request;
@@ -28,4 +29,9 @@ Route::middleware('auth:sanctum')->get('/user', function (Request $request) {
 Route::middleware(['auth:sanctum'])->prefix('admin')->group(function () {
     Route::apiResource('users', UserController::class);
     Route::get('roles', [RoleController::class, 'index']);
+    Route::get('orders/statuses', [OrderController::class, 'statuses']);
+    Route::apiResource('orders', OrderController::class)->only([
+        'index', 'store', 'update', 'destroy'
+    ]);
+    Route::put('orders/{order}/status', [OrderController::class, 'updateStatus']);
 });

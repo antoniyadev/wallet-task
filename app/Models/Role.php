@@ -9,7 +9,7 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 class Role extends Model
 {
     use HasFactory;
-    protected $fillable   = ['name', 'slug'];
+    protected $fillable = ['name', 'slug'];
 
     public const ADMIN    = 'admin';
     public const MERCHANT = 'merchant';

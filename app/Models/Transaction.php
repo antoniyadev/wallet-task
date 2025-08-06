@@ -10,6 +10,9 @@ class Transaction extends Model
 {
     use HasFactory;
 
+    public const TYPE_CREDIT = 'credit';
+    public const TYPE_DEBIT  = 'debit';
+
     protected $fillable = ['user_id', 'type', 'amount', 'description', 'created_by'];
 
     public function user(): BelongsTo
