@@ -23,7 +23,7 @@ This is a full-stack Laravel + React wallet application developed as part of a t
 ```bash
 git clone https://github.com/antoniyadev/wallet-task.git
 cd wallet-task
-cp .env.example .env
+cp .env.example .env   # Windows: copy .env.example .env
 docker compose up -d --build
 ```
 
@@ -44,6 +44,18 @@ php artisan db:seed
 ```
 
 ---
+
+## ⚛️ React Frontend
+
+The frontend is built with React and Bootstrap 4.
+
+### Run frontend:
+
+```bash
+cd frontend
+npm install
+npm start
+```
 
 ## 🌐 Access the App
 
@@ -95,6 +107,17 @@ docker exec -it wallet-app php artisan test
 
 ---
 
+## 🎯 Code Style & Linting
+
+This project follows the [PSR-12](https://www.php-fig.org/psr/psr-12/) coding standard using **[PHP-CS-Fixer](https://github.com/PHP-CS-Fixer/PHP-CS-Fixer)**.
+
+To run the fixer inside the container:
+
+```bash
+docker exec -it wallet-app vendor/bin/php-cs-fixer fix
+
+---
+
 ## 🧰 Docker Structure
 
 | Component       | Description                         |
@@ -115,18 +138,6 @@ docker exec -it wallet-app php artisan test
 - `tests/` — Unit and feature tests
 
 ---
-
-## ⚛️ React Frontend
-
-The frontend is built with React and Bootstrap 4.
-
-### Run frontend:
-
-```bash
-cd frontend
-npm install
-npm start
-```
 
 The app runs at [http://localhost:3000](http://localhost:3000) and interacts with Laravel through cookies and CSRF protection.
 
