@@ -4,6 +4,7 @@ import Cookies from 'js-cookie';
 import FlashMessage from './ui/FlashMessage';
 import DeleteConfirmModal from './ui/DeleteConfirmModal';
 import UserFormModal from './ui/UserFormModal';
+import AddMoneyModal from './ui/AddMoneyModal';
 
 function UserTable() {
     const [users, setUsers] = useState([]);
@@ -12,6 +13,12 @@ function UserTable() {
     const [showFlash, setShowFlash] = useState(false);
     const [editUser, setEditUser] = useState(null);
     const [showForm, setShowForm] = useState(false);
+    const [userToCredit, setUserToCredit] = useState(null);
+
+    const handleSuccess = (message) => {
+        setFlashMessage(message);
+        setTimeout(() => setFlashMessage(''), 3000);
+    };
 
     const fetchUsers = async () => {
         try {
@@ -93,10 +100,16 @@ function UserTable() {
                                     Edit
                                 </button>
                                 <button
-                                    className="btn btn-sm btn-outline-danger"
+                                    className="btn btn-sm btn-outline-danger mr-2"
                                     onClick={() => setUserToDelete(user)}
                                 >
                                     Delete
+                                </button>
+                                <button
+                                    className="btn btn-sm btn-outline-success mr-2"
+                                    onClick={() => setUserToCredit(user)}
+                                >
+                                    Add Money
                                 </button>
                             </td>
                         </tr>
@@ -127,6 +140,30 @@ function UserTable() {
                     setUserToDelete(null);
                 }}
             />
+            {userToCredit && (
+                <AddMoneyModal
+                    show={!!userToCredit}
+                    onClose={() => setUserToCredit(null)}
+                    submitLabel="Add Money"
+                    showDescription={true}
+                    showType={true}
+                    showTitle={false}
+                    onSubmit={async ({ amount, description, type }) => {
+                        await axios.get('/sanctum/csrf-cookie');
+                        const csrf = Cookies.get('XSRF-TOKEN');
+                        axios.defaults.headers.common['X-XSRF-TOKEN'] = decodeURIComponent(csrf);
+                        await axios.post('/api/admin/transactions', {
+                            user_id: userToCredit.id,
+                            amount,
+                            description,
+                            type,
+                        });
+                        fetchUsers();
+                        handleSuccess(`✅ ${type === 'credit' ? 'Credited' : 'Debited'} successfully`);
+                    }}
+                />
+
+            )}
         </>
 
     );

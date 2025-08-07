@@ -33,4 +33,9 @@ class UserPolicy
     {
         return $user->isAdmin();
     }
+
+    public function createTransaction(User $user): bool
+    {
+        return $user->isAdmin();
+    }
 }

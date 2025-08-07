@@ -1,7 +1,7 @@
 import 'bootstrap/dist/css/bootstrap.min.css';
 import 'bootstrap/dist/js/bootstrap.bundle.min.js';
 import React, { useEffect, useState, useRef } from 'react';
-import { BrowserRouter as Router, Routes, Route, Navigate } from 'react-router-dom';
+import { Routes, Route, Navigate } from 'react-router-dom';
 import axios from 'axios';
 import Cookies from 'js-cookie';
 import Login from './components/Login';
@@ -61,15 +61,17 @@ function App() {
     }, []);
 
     if (status === 'loading') return <p>Loading...</p>;
-    if (!user) return <Login onLogin={fetchUser} />;
-
     return (
-        <Router>
-            <Navbar user={user} onLogout={logout} />
+        <>
+            {user && <Navbar user={user} onLogout={logout} />}
 
             <div className="container mt-4">
                 <Routes>
-                    {user.role === 'admin' && (
+                    {!user && (
+                        <Route path="/login" element={<Login onLogin={fetchUser} />} />
+                    )}
+
+                    {user?.role === 'admin' && (
                         <>
                             <Route path="/admin" element={<Navigate to="/admin/users" replace />} />
                             <Route path="/admin/users" element={<AdminDashboard />} />
@@ -77,12 +79,15 @@ function App() {
                             <Route path="/admin/orders" element={<OrderTable />} />
                         </>
                     )}
-                    {user.role === 'merchant' && (
-                        <Route path="/merchant" element={<MerchantDashboard />} />
+
+                    {user?.role === 'merchant' && (
+                        <Route path="/merchant" element={<MerchantDashboard user={user} fetchUser={fetchUser} />} />
                     )}
+
+                    <Route path="*" element={<Navigate to={user ? (user.role === 'admin' ? '/admin' : '/merchant') : '/login'} replace />} />
                 </Routes>
             </div>
-        </Router>
+        </>
     );
 }
 

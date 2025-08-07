@@ -14,11 +14,17 @@ class TransactionFactory extends Factory
      */
     public function definition()
     {
+        $type = $this->faker->randomElement(['credit', 'debit']);
+
+        $description = $type === 'credit'
+            ? 'Received funds from ' . $this->faker->email
+            : 'Sent funds to ' . $this->faker->email;
+
         return [
             'user_id'     => User::factory(),
-            'type'        => $this->faker->randomElement(['credit', 'debit']),
+            'type'        => $type,
             'amount'      => $this->faker->numberBetween(100, 10000),
-            'description' => $this->faker->sentence,
+            'description' => $description,
             'created_by'  => User::factory(),
             'order_id'    => null,
         ];

@@ -4,17 +4,18 @@ namespace App\Services;
 
 use App\Models\Order;
 use App\Models\Transaction;
+use App\Models\User;
 
 class OrderService
 {
-    public function create(array $data): Order
+    public function create(User $user, array $data): Order
     {
         return Order::create([
             'title'       => $data['title'],
             'description' => $data['description'] ?? null,
             'amount'      => $data['amount'],
             'status'      => Order::STATUS_PENDING,
-            'user_id'     => $data['user_id'],
+            'user_id'     => $user->id,
         ]);
     }
 
@@ -41,7 +42,7 @@ class OrderService
             'type'        => $type,
             'amount'      => $order->amount,
             'order_id'    => $order->id,
-            'description' => "Order #{$order->id} processed as {$type}",
+            'description' => "Order Purchased funds #{$order->id}",
             'created_by'  => auth()->id(), // Admin
         ]);
 
