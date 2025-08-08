@@ -74,7 +74,9 @@ class UserController extends Controller
      */
     public function show(User $user): JsonResponse
     {
-        $user->load('transactions');
+        $user->load(['transactions' => function ($q) {
+            $q->latest();
+        }]);
 
         return response()->json($user);
     }

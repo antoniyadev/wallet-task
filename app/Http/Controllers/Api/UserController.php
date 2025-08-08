@@ -29,6 +29,7 @@ class UserController extends Controller
     public function index(Request $request): JsonResponse
     {
         $users = User::query()
+            ->merchants()
             ->where('id', '!=', $request->user()->id)
             ->select('id', 'email', 'name')
             ->orderBy('email')

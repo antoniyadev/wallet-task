@@ -24,7 +24,7 @@ class TransactionSeeder extends Seeder
                 'user_id'     => $merchant->id,
                 'type'        => 'credit',
                 'amount'      => 3000,
-                'description' => "Received fund from admin ({$admin->email})",
+                'description' => "Received funds from admin ({$admin->email})",
                 'created_by'  => $admin->id,
                 'order_id'    => null,
             ]);

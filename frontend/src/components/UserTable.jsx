@@ -200,6 +200,11 @@ function UserTable() {
                     showDescription={true}
                     showType={true}
                     showTitle={false}
+                    onSuccess={(msg) => {
+                        setFlashMessage(msg);
+                        setShowFlash(true);
+                        setTimeout(() => { setShowFlash(false); setFlashMessage(''); }, 3000);
+                    }}
                     onSubmit={async ({ amount, description, type }) => {
                         await axios.get('/sanctum/csrf-cookie');
                         const csrf = Cookies.get('XSRF-TOKEN');

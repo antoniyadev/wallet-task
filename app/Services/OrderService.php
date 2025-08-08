@@ -45,14 +45,6 @@ class OrderService
         $order->update(['status' => $status]);
         $order->refresh();
 
-        if ($status === Order::STATUS_COMPLETED) {
-            $this->createTransaction($order, Transaction::TYPE_CREDIT, auth()->id());
-        }
-
-        if ($status === Order::STATUS_REFUNDED) {
-            $this->createTransaction($order, Transaction::TYPE_DEBIT, auth()->id());
-        }
-
         return $order;
     }
 
@@ -67,8 +59,8 @@ class OrderService
     protected function createTransaction(Order $order, string $type, ?int $createdById = null): void
     {
         $description = $type === Transaction::TYPE_CREDIT
-            ? "Order Purchased funds #{$order->id}"
-            : "Order refunded #{$order->id}";
+            ? "Order purchased funds #{$order->id} (#{$order->title})"
+            : "Refund for order #{$order->id}";
 
         Transaction::create([
             'user_id'     => $order->user_id,
