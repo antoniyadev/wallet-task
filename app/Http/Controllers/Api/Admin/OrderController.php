@@ -21,7 +21,7 @@ class OrderController extends Controller
     {
         $this->authorize('viewAny', Order::class);
 
-        $orders = Order::with('user')->latest()->get();
+        $orders = Order::with('user')->latest()->paginate(10);
 
         return response()->json($orders);
     }

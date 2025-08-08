@@ -3,7 +3,7 @@
 namespace App\Services;
 
 use App\Models\User;
-use Illuminate\Database\Eloquent\Collection;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class UserService
 {
@@ -28,8 +28,8 @@ class UserService
         return $user;
     }
 
-    public function getMerchants(): Collection
+    public function getMerchants(): LengthAwarePaginator
     {
-        return User::merchants()->get();
+        return User::merchants()->paginate(10);
     }
 }

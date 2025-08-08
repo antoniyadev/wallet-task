@@ -15,23 +15,29 @@ function UserTable() {
     const [showForm, setShowForm] = useState(false);
     const [userToCredit, setUserToCredit] = useState(null);
 
+    const [currentPage, setCurrentPage] = useState(1);
+    const [lastPage, setLastPage] = useState(1);
+    const [total, setTotal] = useState(0);
+
     const handleSuccess = (message) => {
         setFlashMessage(message);
         setTimeout(() => setFlashMessage(''), 3000);
     };
 
-    const fetchUsers = async () => {
+    const fetchUsers = async (page = 1) => {
         try {
-            const res = await axios.get('/api/admin/users');
-            setUsers(res.data);
+            const res = await axios.get(`/api/admin/users?page=${page}`);
+            setUsers(res.data.data);
+            setCurrentPage(res.data.current_page);
+            setLastPage(res.data.last_page);
         } catch (err) {
             console.error('Failed to fetch users:', err);
         }
     };
 
     useEffect(() => {
-        fetchUsers();
-    }, []);
+        fetchUsers(currentPage);
+    }, [currentPage]);
 
     const deleteUser = async (id) => {
         try {
@@ -59,6 +65,52 @@ function UserTable() {
         setEditUser(user);
         setShowForm(true);
     };
+
+
+    const renderPagination = () => (
+        <div className="d-flex flex-wrap justify-content-between align-items-center mt-3 gap-2">
+            <div className="text-muted">
+                Showing page {currentPage} of {lastPage} • {total} total
+            </div>
+
+            <nav>
+                <ul className="pagination mb-0">
+                    <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+                        <button className="page-link" onClick={() => setCurrentPage((p) => p - 1)}>
+                            Previous
+                        </button>
+                    </li>
+
+                    {Array.from({ length: lastPage }, (_, i) => i + 1)
+                        .filter((n) => n === 1 || n === lastPage || Math.abs(n - currentPage) <= 2)
+                        .reduce((acc, n, _, arr) => {
+                            if (acc.length && n - acc[acc.length - 1] > 1) acc.push('ellipsis');
+                            acc.push(n);
+                            return acc;
+                        }, [])
+                        .map((n, idx) =>
+                            n === 'ellipsis' ? (
+                                <li key={`e-${idx}`} className="page-item disabled">
+                                    <span className="page-link">…</span>
+                                </li>
+                            ) : (
+                                <li key={n} className={`page-item ${currentPage === n ? 'active' : ''}`}>
+                                    <button className="page-link" onClick={() => setCurrentPage(n)}>
+                                        {n}
+                                    </button>
+                                </li>
+                            )
+                        )}
+
+                    <li className={`page-item ${currentPage === lastPage ? 'disabled' : ''}`}>
+                        <button className="page-link" onClick={() => setCurrentPage((p) => p + 1)}>
+                            Next
+                        </button>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    );
 
     return (
         <>
@@ -164,6 +216,7 @@ function UserTable() {
                 />
 
             )}
+            {renderPagination()}
         </>
 
     );

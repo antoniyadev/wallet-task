@@ -8,15 +8,25 @@ function OrderTable() {
     const [statusUpdating, setStatusUpdating] = useState(null);
     const [orderStatuses, setOrderStatuses] = useState([]);
 
+    const [currentPage, setCurrentPage] = useState(1);
+    const [lastPage, setLastPage] = useState(1);
+    const [total, setTotal] = useState(0);
+
     useEffect(() => {
-        fetchOrders();
         fetchOrderStatuses();
     }, []);
 
-    const fetchOrders = async () => {
+    useEffect(() => {
+        fetchOrders(currentPage);
+    }, [currentPage]);
+
+    const fetchOrders = async (page = 1, per = 10) => {
         try {
-            const res = await axios.get('/api/admin/orders');
-            setOrders(res.data);
+            const res = await axios.get(`/api/admin/orders?page=${page}&per_page=${per}`);
+            setOrders(res.data.data);
+            setCurrentPage(res.data.current_page);
+            setLastPage(res.data.last_page);
+            setTotal(res.data.total);
         } catch (err) {
             console.error('Failed to fetch orders:', err);
         }
@@ -25,7 +35,8 @@ function OrderTable() {
     const fetchOrderStatuses = async () => {
         try {
             const res = await axios.get('/api/admin/orders/statuses');
-            setOrderStatuses(res.data); // expected to be array of { value, label, color }
+            // expected: [{ value, label, color }]
+            setOrderStatuses(res.data);
         } catch (err) {
             console.error('Failed to fetch statuses:', err);
         }
@@ -39,13 +50,9 @@ function OrderTable() {
             await axios.put(
                 `/api/admin/orders/${orderId}/status`,
                 { status: newStatus },
-                {
-                    headers: {
-                        'X-XSRF-TOKEN': decodeURIComponent(csrfToken),
-                    },
-                }
+                { headers: { 'X-XSRF-TOKEN': decodeURIComponent(csrfToken) } }
             );
-            await fetchOrders();
+            await fetchOrders(currentPage); // stay on same page
         } catch (err) {
             console.error('Failed to update order:', err.response?.data || err.message);
         } finally {
@@ -53,14 +60,53 @@ function OrderTable() {
         }
     };
 
-    const getStatusConfig = (statusKey) => {
-        return (
-            orderStatuses.find((s) => s.value === statusKey) || {
-                label: statusKey,
-                color: 'secondary',
-            }
-        );
-    };
+    const getStatusConfig = (statusKey) =>
+        orderStatuses.find((s) => s.value === statusKey) || { label: statusKey, color: 'secondary' };
+
+    const renderPagination = () => (
+        <div className="d-flex flex-wrap justify-content-between align-items-center mt-3 gap-2">
+            <div className="text-muted">
+                Showing page {currentPage} of {lastPage} • {total} total
+            </div>
+
+            <nav>
+                <ul className="pagination mb-0">
+                    <li className={`page-item ${currentPage === 1 ? 'disabled' : ''}`}>
+                        <button className="page-link" onClick={() => setCurrentPage((p) => p - 1)}>
+                            Previous
+                        </button>
+                    </li>
+
+                    {Array.from({ length: lastPage }, (_, i) => i + 1)
+                        .filter((n) => n === 1 || n === lastPage || Math.abs(n - currentPage) <= 2)
+                        .reduce((acc, n, _, arr) => {
+                            if (acc.length && n - acc[acc.length - 1] > 1) acc.push('ellipsis');
+                            acc.push(n);
+                            return acc;
+                        }, [])
+                        .map((n, idx) =>
+                            n === 'ellipsis' ? (
+                                <li key={`e-${idx}`} className="page-item disabled">
+                                    <span className="page-link">…</span>
+                                </li>
+                            ) : (
+                                <li key={n} className={`page-item ${currentPage === n ? 'active' : ''}`}>
+                                    <button className="page-link" onClick={() => setCurrentPage(n)}>
+                                        {n}
+                                    </button>
+                                </li>
+                            )
+                        )}
+
+                    <li className={`page-item ${currentPage === lastPage ? 'disabled' : ''}`}>
+                        <button className="page-link" onClick={() => setCurrentPage((p) => p + 1)}>
+                            Next
+                        </button>
+                    </li>
+                </ul>
+            </nav>
+        </div>
+    );
 
     return (
         <div className="container mt-4">
@@ -94,8 +140,9 @@ function OrderTable() {
                                             data-toggle="dropdown"
                                             aria-haspopup="true"
                                             aria-expanded="false"
+                                            disabled={statusUpdating === order.id}
                                         >
-                                            {statusInfo.label}
+                                            {statusUpdating === order.id ? 'Updating…' : statusInfo.label}
                                         </button>
                                         <div className="dropdown-menu">
                                             {orderStatuses
@@ -115,8 +162,17 @@ function OrderTable() {
                             </tr>
                         );
                     })}
+                    {orders.length === 0 && (
+                        <tr>
+                            <td colSpan="6" className="text-center text-muted">
+                                No orders found.
+                            </td>
+                        </tr>
+                    )}
                 </tbody>
             </table>
+
+            {renderPagination()}
         </div>
     );
 }
