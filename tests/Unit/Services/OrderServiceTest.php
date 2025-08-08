@@ -2,12 +2,14 @@
 
 namespace Tests\Unit\Services;
 
+use App\Events\OrderCompleted;
+use App\Events\OrderRefunded;
 use App\Models\Order;
-use App\Models\Transaction;
 use App\Models\User;
 use App\Services\OrderService;
 use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Event;
 use Tests\TestCase;
 
 class OrderServiceTest extends TestCase
@@ -21,71 +23,52 @@ class OrderServiceTest extends TestCase
     }
 
     /** @test */
-    public function test_completed_order_creates_credit_transaction()
+    public function test_dispatches_event_when_order_is_completed()
     {
-        $user = User::factory()->merchant()->create(['amount' => 0]);
+        Event::fake([OrderCompleted::class, OrderRefunded::class]);
 
+        $user  = User::factory()->merchant()->create(['amount' => 0]);
         $order = Order::factory()->create([
             'user_id' => $user->id,
             'status'  => Order::STATUS_PENDING,
             'amount'  => 2000,
         ]);
 
-        $service = new OrderService();
-        $service->updateStatus($order, Order::STATUS_COMPLETED);
+        (new OrderService())->updateStatus($order, Order::STATUS_COMPLETED);
 
-        $this->assertDatabaseHas('transactions', [
-            'user_id'     => $user->id,
-            'type'        => Transaction::TYPE_CREDIT,
-            'amount'      => 2000,
-            'description' => "Order Purchased funds #{$order->id}",
-        ]);
-
-        $this->assertEquals(2000, $user->fresh()->amount);
+        Event::assertDispatched(OrderCompleted::class, fn ($e) => $e->order->is($order));
+        Event::assertNotDispatched(OrderRefunded::class);
     }
 
     /** @test */
-    public function test_refunded_order_creates_debit_transaction()
+    public function test_dispatches_event_when_order_is_refunded()
     {
-        $user = User::factory()->merchant()->create(['amount' => 5000]);
+        Event::fake([OrderCompleted::class, OrderRefunded::class]);
 
+        $user  = User::factory()->merchant()->create(['amount' => 5000]);
         $order = Order::factory()->create([
             'user_id' => $user->id,
             'status'  => Order::STATUS_PENDING,
             'amount'  => 3000,
         ]);
 
-        $service = new OrderService();
-        $service->updateStatus($order, Order::STATUS_REFUNDED);
+        (new OrderService())->updateStatus($order, Order::STATUS_REFUNDED);
 
-        $this->assertDatabaseHas('transactions', [
-            'user_id'     => $user->id,
-            'type'        => Transaction::TYPE_DEBIT,
-            'amount'      => 3000,
-            'description' => "Order refunded #{$order->id}",
-        ]);
-
-        $this->assertEquals(2000, $user->fresh()->amount);
+        Event::assertDispatched(OrderRefunded::class, fn ($e) => $e->order->is($order));
+        Event::assertNotDispatched(OrderCompleted::class);
     }
 
     /** @test */
-    public function test_cancelled_order_creates_no_transaction()
+    public function test_does_nothing_for_cancelled()
     {
-        $user = User::factory()->merchant()->create(['amount' => 5000]);
+        Event::fake([OrderCompleted::class, OrderRefunded::class]);
 
-        $order = Order::factory()->create([
-            'user_id' => $user->id,
-            'status'  => Order::STATUS_PENDING,
-            'amount'  => 3000,
-        ]);
+        $user  = User::factory()->merchant()->create();
+        $order = Order::factory()->create(['user_id' => $user->id, 'status' => Order::STATUS_PENDING]);
 
-        $service = new OrderService();
-        $service->updateStatus($order, Order::STATUS_CANCELLED);
+        (new OrderService())->updateStatus($order, Order::STATUS_CANCELLED);
 
-        $this->assertDatabaseMissing('transactions', [
-            'order_id' => $order->id,
-        ]);
-
-        $this->assertEquals(5000, $user->fresh()->amount);
+        Event::assertNotDispatched(OrderCompleted::class);
+        Event::assertNotDispatched(OrderRefunded::class);
     }
 }
