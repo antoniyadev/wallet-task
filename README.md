@@ -2,6 +2,8 @@
 
 This is a full-stack Laravel + React wallet application developed as part of a technical assessment. It features user roles (admin/merchant), wallet transactions, top-up orders, and internal money transfers. The app is containerized using Docker and works seamlessly across macOS, Ubuntu, and Windows (via WSL2).
 
+<img width="1159" height="769" alt="Screenshot 2025-08-08 at 13 23 48" src="https://github.com/user-attachments/assets/9e32c302-0b57-4446-b3df-655e65b4e031" />
+
 ---
 
 ## 🚀 Setup Instructions
