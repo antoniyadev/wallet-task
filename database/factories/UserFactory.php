@@ -3,7 +3,6 @@
 namespace Database\Factories;
 
 use App\Models\Role;
-use App\Models\User;
 use Illuminate\Database\Eloquent\Factories\Factory;
 use Illuminate\Support\Str;
 
@@ -16,36 +15,18 @@ class UserFactory extends Factory
      */
     public function definition()
     {
-        $adminRole    = Role::where('slug', 'admin')->first();
-        $merchantRole = Role::where('slug', 'merchant')->first();
-
-        // One admin
-        User::factory()->create([
-            'name'              => 'Admin',
-            'email'             => 'admin@example.com',
+        return [
+            'name'              => $this->faker->name,
+            'email'             => $this->faker->unique()->safeEmail,
             'email_verified_at' => now(),
-            'password'          => bcrypt('secretpassword'),
+            'password'          => bcrypt('password'), // default password
             'remember_token'    => Str::random(10),
-            'role_id'           => $adminRole->id,
-            'amount'            => 100000,
-            'description'       => 'Main system administrator',
-        ]);
-
-        // One merchant (static)
-        User::factory()->create([
-            'name'              => 'Merchant',
-            'email'             => 'merchant@example.com',
-            'email_verified_at' => now(),
-            'password'          => bcrypt('merchantpassword'),
-            'remember_token'    => Str::random(10),
-            'role_id'           => $merchantRole->id,
-            'amount'            => 50000,
-            'description'       => 'Test merchant user',
-        ]);
-
-        // 10 random merchants
-        User::factory(10)->create(['role_id' => $merchantRole->id]);
+            'role_id'           => optional(Role::inRandomOrder()->first())->id, // or pass via state
+            'amount'            => 0,
+            'description'       => $this->faker->sentence(8),
+        ];
     }
+
 
     /**
      * Indicate that the model's email address should be unverified.
@@ -57,6 +38,24 @@ class UserFactory extends Factory
         return $this->state(function (array $attributes) {
             return [
                 'email_verified_at' => null,
+            ];
+        });
+    }
+
+    public function admin()
+    {
+        return $this->state(function () {
+            return [
+                'role_id' => Role::firstOrCreate(['slug' => 'admin'], ['name' => 'Admin'])->id,
+            ];
+        });
+    }
+
+    public function merchant()
+    {
+        return $this->state(function () {
+            return [
+                'role_id' => Role::firstOrCreate(['slug' => 'merchant'], ['name' => 'Merchant'])->id,
             ];
         });
     }

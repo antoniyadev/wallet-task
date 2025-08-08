@@ -7,32 +7,23 @@ use Illuminate\Validation\Rule;
 
 class UpdateUserRequest extends FormRequest
 {
-    /**
-     * Determine if the user is authorized to make this request.
-     *
-     * @return bool
-     */
-    public function authorize()
+    public function authorize(): bool
     {
-        return true;
+        return auth()->check() && auth()->user()->isAdmin();
     }
 
-    /**
-     * Get the validation rules that apply to the request.
-     *
-     * @return array
-     */
-    public function rules()
+    public function rules(): array
     {
+        $routeUser = $this->route('user');          // can be id or model
+        $userId    = is_object($routeUser) ? $routeUser->id : $routeUser;
+
         return [
-            'name'  => 'required|string|max:255',
-            'email' => [
-                'required',
-                'email',
-                Rule::unique('users', 'email')->ignore($this->user->id),
-            ],
-            'password' => 'nullable|string|min:6',
-            'role_id'  => 'required|exists:roles,id',
+            'name'        => ['sometimes','required','string','max:255'],
+            'email'       => ['sometimes','required','email','max:255', Rule::unique('users', 'email')->ignore($userId)],
+            'description' => ['sometimes','nullable','string','max:1000'], // <-- fixed key
+            'password'    => ['sometimes','nullable','string','min:6'],
+            'role_id'     => ['sometimes','required','exists:roles,id'],
+            'amount'      => ['sometimes','integer','min:0'],
         ];
     }
 }

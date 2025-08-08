@@ -25,8 +25,8 @@ class TransactionController extends Controller
         $user = User::findOrFail($data['user_id']);
 
         $transaction = $data['type'] === 'credit'
-            ? $this->transactionService->createManualCredit($user, $data['amount'], $data['description'])
-            : $this->transactionService->createManualDebit($user, $data['amount'], $data['description']);
+            ? $this->transactionService->createManualCredit($user, $data['amount'], $data['description'] ?? null)
+            : $this->transactionService->createManualDebit($user, $data['amount'], $data['description'] ?? null);
 
         return response()->json([
             'message'     => 'Transaction completed successfully',

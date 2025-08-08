@@ -8,7 +8,9 @@ class StoreTransactionRequest extends FormRequest
 {
     public function authorize()
     {
-        return true;
+        $user = $this->user();
+
+        return $user && optional($user->role)->slug === 'admin';
     }
 
     public function rules(): array
@@ -17,7 +19,7 @@ class StoreTransactionRequest extends FormRequest
             'user_id'     => ['required', 'exists:users,id'],
             'amount'      => ['required', 'integer', 'min:1'],
             'type'        => ['required', 'in:credit,debit'],
-            'description' => ['nullable', 'string', 'max:255'],
+            'description' => ['required', 'string', 'max:255'],
         ];
     }
 }

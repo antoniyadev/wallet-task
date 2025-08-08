@@ -13,12 +13,23 @@ class OrderSeeder extends Seeder
      *
      * @return void
      */
-    public function run()
+    public function run(): void
     {
-        $merchants = User::whereHas('role', fn ($q) => $q->where('slug', 'merchant'))->get();
+        $merchant = User::where('email', 'merchant@example.com')->first();
 
-        $merchants->each(function ($merchant) {
-            Order::factory()->count(2)->create(['user_id' => $merchant->id]);
-        });
+        // Add at least one completed order
+        Order::create([
+            'user_id'     => $merchant->id,
+            'title'       => 'Top-up',
+            'amount'      => 5693,
+            'status'      => Order::STATUS_COMPLETED,
+            'description' => 'Top-up $56.93',
+        ]);
+
+        // Add additional optional orders
+        Order::factory()->count(2)->create([
+            'user_id' => $merchant->id,
+            'status'  => Order::STATUS_REFUNDED,
+        ]);
     }
 }

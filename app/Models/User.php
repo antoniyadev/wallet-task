@@ -46,6 +46,7 @@ class User extends Authenticatable
      */
     protected $casts = [
         'email_verified_at' => 'datetime',
+        'amount'            => 'integer', // Store amount as integer (cents)
     ];
 
     public function role(): BelongsTo

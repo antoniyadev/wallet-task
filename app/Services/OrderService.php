@@ -21,29 +21,33 @@ class OrderService
 
     public function updateStatus(Order $order, string $status): Order
     {
-        $order->status = $status;
-        $order->save();
+        $order->update(['status' => $status]);
+        $order->refresh();
 
         if ($status === Order::STATUS_COMPLETED) {
-            $this->createTransaction($order, Transaction::TYPE_CREDIT);
+            $this->createTransaction($order, Transaction::TYPE_CREDIT, auth()->id());
         }
 
         if ($status === Order::STATUS_REFUNDED) {
-            $this->createTransaction($order, Transaction::TYPE_DEBIT);
+            $this->createTransaction($order, Transaction::TYPE_DEBIT, auth()->id());
         }
 
         return $order;
     }
 
-    protected function createTransaction(Order $order, string $type)
+    protected function createTransaction(Order $order, string $type, ?int $createdById = null)
     {
+        $description = $type === Transaction::TYPE_CREDIT
+            ? "Order Purchased funds #{$order->id}"
+            : "Order refunded #{$order->id}";
+
         Transaction::create([
             'user_id'     => $order->user_id,
             'type'        => $type,
             'amount'      => $order->amount,
             'order_id'    => $order->id,
-            'description' => "Order Purchased funds #{$order->id}",
-            'created_by'  => auth()->id(), // Admin
+            'description' => $description,
+            'created_by'  => $createdById ?? null,
         ]);
 
         // Update wallet

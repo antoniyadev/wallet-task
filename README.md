@@ -59,8 +59,7 @@ npm start
 
 ## 🌐 Access the App
 
-- Laravel backend: [http://localhost:8080](http://localhost:8080)
-- React frontend: [http://localhost:3000](http://localhost:3000)
+- [http://localhost:3000](http://localhost:3000)
 
 ---
 
@@ -115,6 +114,7 @@ To run the fixer inside the container:
 
 ```bash
 docker exec -it wallet-app vendor/bin/php-cs-fixer fix
+```
 
 ---
 
@@ -136,10 +136,6 @@ docker exec -it wallet-app vendor/bin/php-cs-fixer fix
 - `app/Services/` — Business logic for order/transfer handling
 - `resources/views/` — Blade templates
 - `tests/` — Unit and feature tests
-
----
-
-The app runs at [http://localhost:3000](http://localhost:3000) and interacts with Laravel through cookies and CSRF protection.
 
 ---
 
