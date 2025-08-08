@@ -5,12 +5,34 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Models\Transaction;
 use App\Models\User;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 
+/**
+ * Class TransferController
+ *
+ * Handles wallet-to-wallet transfers between users.
+ * Allows an authenticated user to send funds to another user via email address.
+ *
+ * @package App\Http\Controllers\Api
+ */
 class TransferController extends Controller
 {
-    public function store(Request $request)
+    /**
+     * Transfer funds from the authenticated user to another user.
+     *
+     * Validates:
+     * - Recipient email must exist and not be the sender's own.
+     * - Transfer amount must be a positive integer.
+     * - Sender must have a sufficient balance.
+     *
+     * Performs the debit/credit operations for both accounts inside a DB transaction.
+     *
+     * @param  Request $request Incoming HTTP request containing transfer details.
+     * @return JsonResponse JSON with a success or error message.
+     */
+    public function store(Request $request): JsonResponse
     {
         $validated = $request->validate([
             'to_user_email' => ['required', 'email', 'exists:users,email'],
@@ -47,7 +69,7 @@ class TransferController extends Controller
                 'user_id'     => $recipient->id,
                 'type'        => Transaction::TYPE_CREDIT,
                 'amount'      => $validated['amount'],
-                'description' => "Received fund from {$sender->email}",
+                'description' => "Received funds from {$sender->email}",
                 'created_by'  => $sender->id,
             ]);
             $recipient->increment('amount', $validated['amount']);

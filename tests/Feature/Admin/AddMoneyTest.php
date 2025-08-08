@@ -40,7 +40,7 @@ class AddMoneyTest extends TestCase
             'type'        => Transaction::TYPE_CREDIT,
             'amount'      => 1000,
             'description' => 'Manual top-up',
-        ])->assertStatus(200);
+        ])->assertStatus(201);
 
         $this->assertEquals(1000, $user->fresh()->amount);
 

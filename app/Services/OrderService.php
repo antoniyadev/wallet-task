@@ -6,8 +6,22 @@ use App\Models\Order;
 use App\Models\Transaction;
 use App\Models\User;
 
+/**
+ * Service class responsible for handling Order-related business logic.
+ */
 class OrderService
 {
+    /**
+     * Create a new order for a given user.
+     *
+     * @param  User  $user  The user creating the order.
+     * @param  array $data  Order data: [
+     *                      'title' => string,
+     *                      'description' => string|null,
+     *                      'amount' => int (stored in cents)
+     *                      ]
+     * @return Order        The newly created Order model instance.
+     */
     public function create(User $user, array $data): Order
     {
         return Order::create([
@@ -19,6 +33,13 @@ class OrderService
         ]);
     }
 
+    /**
+     * Update the status of an order and trigger corresponding wallet transactions.
+     *
+     * @param  Order  $order   The order to update.
+     * @param  string $status  The new status (completed, refunded, etc.).
+     * @return Order           The updated Order instance.
+     */
     public function updateStatus(Order $order, string $status): Order
     {
         $order->update(['status' => $status]);
@@ -35,7 +56,15 @@ class OrderService
         return $order;
     }
 
-    protected function createTransaction(Order $order, string $type, ?int $createdById = null)
+    /**
+     * Create a wallet transaction for an order and update the user's balance.
+     *
+     * @param  Order    $order         The related order.
+     * @param  string   $type          Transaction type: credit or debit.
+     * @param  int|null $createdById   ID of the user who created the transaction (admin/merchant).
+     * @return void
+     */
+    protected function createTransaction(Order $order, string $type, ?int $createdById = null): void
     {
         $description = $type === Transaction::TYPE_CREDIT
             ? "Order Purchased funds #{$order->id}"
@@ -50,10 +79,20 @@ class OrderService
             'created_by'  => $createdById ?? null,
         ]);
 
-        // Update wallet
-        $order->user->increment('amount', $type === 'credit' ? $order->amount : -$order->amount);
+        // Update user's wallet balance
+        $order->user->increment('amount', $type === Transaction::TYPE_CREDIT ? $order->amount : -$order->amount);
     }
 
+    /**
+     * Get available order statuses with display labels and colors.
+     *
+     * @return array[] Each element contains:
+     *                 [
+     *                   'value' => string (status key),
+     *                   'label' => string (human-readable name),
+     *                   'color' => string (Bootstrap color class)
+     *                 ]
+     */
     public function getStatusOptions(): array
     {
         $statuses = [];
